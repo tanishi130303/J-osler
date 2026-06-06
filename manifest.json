@@ -1,10 +1,14 @@
 {
-  "name": "内科",
+  "name": "内科 J-OSLER 進捗管理",
   "short_name": "内科",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
   "background_color": "#f4f1ea",
   "theme_color": "#0f5a52",
-  "lang": "ja"
+  "lang": "ja",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
 }
