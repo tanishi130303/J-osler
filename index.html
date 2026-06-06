@@ -190,6 +190,10 @@
   .statusline{font-size:.78rem;color:var(--ink-soft);margin-top:4px}
   .rg-hyo{display:flex;align-items:center;gap:5px;cursor:pointer;color:var(--gold);font-weight:600}
   .rg-hyo input{width:15px;height:15px;accent-color:var(--gold);cursor:pointer}
+  .rg-shoki{display:flex;align-items:center;gap:5px;cursor:pointer;color:var(--teal-bright);font-weight:600}
+  .rg-shoki input{width:15px;height:15px;accent-color:var(--teal-bright);cursor:pointer}
+  .rg-out{display:flex;align-items:center;gap:5px;cursor:pointer;color:var(--clay);font-weight:600}
+  .rg-out input{width:15px;height:15px;accent-color:var(--clay);cursor:pointer}
   .field-head .cov{font-size:.74rem;color:var(--ink-soft);font-variant-numeric:tabular-nums}
   .field-head .cov.met{color:var(--g-green);font-weight:700}
   .pickline{font-size:.78rem;color:var(--gold);margin-top:12px;font-weight:500}
@@ -241,15 +245,15 @@
         </div>
         <div class="card" id="rc-out">
           <div class="k">うち外来症例（上限 1割）</div>
-          <div class="v"><input type="number" min="0" id="rOut" class="cnt" value="0"><small> 症例</small></div>
+          <div class="v"><span id="rOutN">0</span><small> 症例</small></div>
           <div class="bar"><i id="rOutBar"></i></div>
-          <div class="note" id="rOutNote"></div>
+          <div class="note" id="rOutNote">各症例のチェックから自動集計</div>
         </div>
         <div class="card" id="rc-shoki">
           <div class="k">うち初期研修症例（上限 60）</div>
-          <div class="v"><input type="number" min="0" id="rShoki" class="cnt" value="0"><small> 症例</small></div>
+          <div class="v"><span id="rShokiN">0</span><small> / 60 症例</small></div>
           <div class="bar"><i id="rShokiBar"></i></div>
-          <div class="note" id="rShokiNote"></div>
+          <div class="note" id="rShokiNote">各症例のチェックから自動集計</div>
         </div>
       </div>
     </section>
@@ -723,7 +727,7 @@ REG_SLOTS.forEach(s=> regState[s.id]={reg:false,count:1,cases:[mkCase()]});
 let saveTimerReg=null;
 function saveReg(){
   try{
-    const payload={groups:regState, out:numVal('rOut'), shoki:numVal('rShoki')};
+    const payload={groups:regState};
     localStorage.setItem(KEY_REG, JSON.stringify(payload));
     const t=new Date();
     document.getElementById('savedLabel2').textContent="保存済み "+t.getHours().toString().padStart(2,'0')+":"+t.getMinutes().toString().padStart(2,'0');
@@ -738,16 +742,14 @@ function loadReg(){
     if(v){
       const d=JSON.parse(v);
       if(d.groups) REG_SLOTS.forEach(s=>{ const g=d.groups[s.id]; if(!g) return;
-        if(g.cases){ regState[s.id]={reg:!!g.reg,count:Math.max(1,parseInt(g.count)||1),cases:g.cases.map(c=>({name:c.name||"",status:c.status||"作成中",hyo:!!c.hyo}))}; }
-        else { regState[s.id]={reg:!!g.reg,count:Math.max(1,parseInt(g.count)||1),cases:[{name:g.name||"",status:g.status||"作成中",hyo:!!g.hyo}]}; }
+        if(g.cases){ regState[s.id]={reg:!!g.reg,count:Math.max(1,parseInt(g.count)||1),cases:g.cases.map(c=>({name:c.name||"",status:c.status||"作成中",hyo:!!c.hyo,shoki:!!c.shoki,out:!!c.out}))}; }
+        else { regState[s.id]={reg:!!g.reg,count:Math.max(1,parseInt(g.count)||1),cases:[{name:g.name||"",status:g.status||"作成中",hyo:!!g.hyo,shoki:false,out:false}]}; }
         syncCases(regState[s.id]); });
-      document.getElementById('rOut').value=d.out||0;
-      document.getElementById('rShoki').value=d.shoki||0;
     }
   }catch(e){ /* no saved data yet */ }
 }
 
-function mkCase(){return {name:"",status:"作成中",hyo:false};}
+function mkCase(){return {name:"",status:"作成中",hyo:false,shoki:false,out:false};}
 function syncCases(rs){ if(!rs.cases) rs.cases=[mkCase()]; rs.count=Math.max(1,parseInt(rs.count)||1); while(rs.cases.length<rs.count) rs.cases.push(mkCase()); if(rs.cases.length>rs.count) rs.cases.length=rs.count; }
 function caseTint(rs){ return (rs.cases&&rs.cases.length&&rs.cases.every(c=>c.status==='作成済み'))?'作成済み':'作成中'; }
 function casesHTML(id){ const rs=regState[id]; syncCases(rs); const multi=rs.count>1; return rs.cases.map((c,ci)=>`
@@ -759,11 +761,15 @@ function casesHTML(id){ const rs=regState[id]; syncCases(rs); const multi=rs.cou
             <option value="作成済み" ${c.status==='作成済み'?'selected':''}>作成済み</option>
           </select>
           <label class="rg-hyo"><input type="checkbox" class="cHyo" data-ci="${ci}" ${c.hyo?'checked':''}> ★要約候補</label>
+          <label class="rg-shoki"><input type="checkbox" class="cShoki" data-ci="${ci}" ${c.shoki?'checked':''}> 初期研修</label>
+          <label class="rg-out"><input type="checkbox" class="cOut" data-ci="${ci}" ${c.out?'checked':''}> 外来</label>
         </div>`).join(''); }
 function wireCases(box,id,row){
   box.querySelectorAll('.cName').forEach(el=>el.addEventListener('input',()=>{regState[id].cases[+el.dataset.ci].name=el.value;queueSaveReg();}));
   box.querySelectorAll('.cStatus').forEach(el=>el.addEventListener('change',()=>{regState[id].cases[+el.dataset.ci].status=el.value;row.dataset.rst=caseTint(regState[id]);queueSaveReg();recomputeReg();}));
   box.querySelectorAll('.cHyo').forEach(el=>el.addEventListener('change',()=>{regState[id].cases[+el.dataset.ci].hyo=el.checked;queueSaveReg();recomputeReg();}));
+  box.querySelectorAll('.cShoki').forEach(el=>el.addEventListener('change',()=>{regState[id].cases[+el.dataset.ci].shoki=el.checked;queueSaveReg();recomputeReg();}));
+  box.querySelectorAll('.cOut').forEach(el=>el.addEventListener('change',()=>{regState[id].cases[+el.dataset.ci].out=el.checked;queueSaveReg();recomputeReg();}));
 }
 function buildRegUI(){
   const root=document.getElementById('regfields'); root.innerHTML="";
@@ -799,20 +805,21 @@ function setNote(id,msg,ok){
 }
 
 function recomputeReg(){
-  let covered=0,total=0,hyo=0,done=0,prog=0;
-  REG_SLOTS.forEach(s=>{const rs=regState[s.id]; if(rs.reg){covered++; syncCases(rs); total+=rs.count; rs.cases.forEach(c=>{ if(c.hyo) hyo++; if(c.status==='作成済み') done++; else prog++; });}});
+  let covered=0,total=0,hyo=0,done=0,prog=0,shokiN=0,outN=0;
+  REG_SLOTS.forEach(s=>{const rs=regState[s.id]; if(rs.reg){covered++; syncCases(rs); total+=rs.count; rs.cases.forEach(c=>{ if(c.hyo) hyo++; if(c.shoki) shokiN++; if(c.out) outN++; if(c.status==='作成済み') done++; else prog++; });}});
   document.getElementById('rgN').textContent=covered;
   document.getElementById('rgBar').style.width=Math.min(covered/70*100,100)+"%";
   setNote('rgNote', covered>=56?('修了要件クリア（'+covered+'群）✓'):('修了要件：56群以上（あと'+(56-covered)+'群）'), covered>=56);
   document.getElementById('rtN').textContent=total;
   document.getElementById('rtBar').style.width=Math.min(total/120*100,100)+"%";
   setNote('rtNote', total>=120?('修了要件クリア（'+total+'症例）✓'):('修了要件：120症例以上（あと'+(120-total)+'症例）'), total>=120);
-  const out=numVal('rOut'), outLimit=Math.floor(total*0.1);
-  document.getElementById('rOutBar').style.width=(outLimit>0?Math.min(out/outLimit*100,100):0)+"%";
-  toggleWarn('rc-out', out>outLimit, 'rOutNote', '上限 '+outLimit+'症例（総数の1割）'+(out>outLimit?' ・超過':''));
-  const shoki=numVal('rShoki');
-  document.getElementById('rShokiBar').style.width=Math.min(shoki/60*100,100)+"%";
-  toggleWarn('rc-shoki', shoki>60, 'rShokiNote', shoki>60?'上限60症例を超過':'上限 60症例');
+  const outLimit=Math.floor(total*0.1);
+  document.getElementById('rOutN').textContent=outN;
+  document.getElementById('rOutBar').style.width=(outLimit>0?Math.min(outN/outLimit*100,100):0)+"%";
+  toggleWarn('rc-out', outN>outLimit, 'rOutNote', '上限 '+outLimit+'症例（総数の1割）'+(outN>outLimit?' ・超過':''));
+  document.getElementById('rShokiN').textContent=shokiN;
+  document.getElementById('rShokiBar').style.width=Math.min(shokiN/60*100,100)+"%";
+  toggleWarn('rc-shoki', shokiN>60, 'rShokiNote', shokiN>60?'上限60症例を超過':'各症例のチェックから自動集計（上限60）');
   REG_FIELDS.forEach((fd,fi)=>{
     const tot=fd.groups.length, need=Math.ceil(tot/2); let c=0;
     fd.groups.forEach((g,gi)=>{ if(regState["r"+fi+"_"+gi].reg) c++; });
@@ -828,7 +835,6 @@ function recomputeReg(){
 document.getElementById('resetRegBtn').addEventListener('click',()=>{
   if(!confirm('症例登録の入力をすべて消去します。よろしいですか？')) return;
   REG_SLOTS.forEach(s=> regState[s.id]={reg:false,count:1,cases:[mkCase()]});
-  document.getElementById('rOut').value=0; document.getElementById('rShoki').value=0;
   try{ localStorage.removeItem(KEY_REG); }catch(e){}
   buildRegUI(); recomputeReg();
   document.getElementById('savedLabel2').textContent="リセットしました";
@@ -844,8 +850,6 @@ document.querySelectorAll('.tab').forEach(b=>b.addEventListener('click',()=>{
 (function init(){
   load(); buildUI(); recompute();
   loadReg(); buildRegUI();
-  document.getElementById('rOut').addEventListener('input',()=>{queueSaveReg();recomputeReg();});
-  document.getElementById('rShoki').addEventListener('input',()=>{queueSaveReg();recomputeReg();});
   recomputeReg();
 })();
 </script>
