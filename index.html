@@ -180,8 +180,13 @@
   .rg-extra{display:none;align-items:center;gap:12px;font-size:.74rem;color:var(--ink-soft)}
   .regrow.on .rg-extra{display:flex}
   .rg-extra input[type=number]{width:52px;font-family:inherit;font-size:.8rem;padding:4px 6px;border:1px solid var(--line);border-radius:6px;background:#fff}
-  .rg-extra input.cName{width:140px;font-family:inherit;font-size:.78rem;padding:4px 8px;border:1px solid var(--line);border-radius:6px;background:#fff;color:var(--ink)}
-  .rg-extra select.cStatus{font-family:inherit;font-size:.78rem;padding:4px 6px;border:1px solid var(--line);border-radius:6px;background:#fff;color:var(--ink);cursor:pointer}
+  .regrow .cName{width:150px;font-family:inherit;font-size:.78rem;padding:4px 8px;border:1px solid var(--line);border-radius:6px;background:#fff;color:var(--ink)}
+  .regrow .cStatus{font-family:inherit;font-size:.78rem;padding:4px 6px;border:1px solid var(--line);border-radius:6px;background:#fff;color:var(--ink);cursor:pointer}
+  .regrow .cases{display:none;flex-basis:100%;width:100%;margin-top:2px;padding-left:26px}
+  .regrow.on .cases{display:block}
+  .case-row{display:flex;align-items:center;gap:8px 12px;flex-wrap:wrap;padding:6px 0}
+  .case-row + .case-row{border-top:1px dotted var(--line)}
+  .case-no{font-family:"Noto Serif JP",serif;font-weight:700;font-size:.72rem;color:#fff;background:var(--teal);min-width:32px;height:22px;display:inline-flex;align-items:center;justify-content:center;border-radius:5px}
   .statusline{font-size:.78rem;color:var(--ink-soft);margin-top:4px}
   .rg-hyo{display:flex;align-items:center;gap:5px;cursor:pointer;color:var(--gold);font-weight:600}
   .rg-hyo input{width:15px;height:15px;accent-color:var(--gold);cursor:pointer}
@@ -713,7 +718,7 @@ const KEY_REG="josler-reg-v1";
 let REG_SLOTS=[];
 REG_FIELDS.forEach((fd,fi)=> fd.groups.forEach((g,gi)=> REG_SLOTS.push({id:"r"+fi+"_"+gi, fi, gi, field:fd.f, g:g.g, eg:g.eg})));
 let regState={};
-REG_SLOTS.forEach(s=> regState[s.id]={reg:false,count:1,hyo:false,status:"作成中",name:""});
+REG_SLOTS.forEach(s=> regState[s.id]={reg:false,count:1,cases:[mkCase()]});
 
 let saveTimerReg=null;
 function saveReg(){
@@ -732,13 +737,34 @@ function loadReg(){
     const v=localStorage.getItem(KEY_REG);
     if(v){
       const d=JSON.parse(v);
-      if(d.groups) REG_SLOTS.forEach(s=>{ if(d.groups[s.id]) regState[s.id]={...regState[s.id],...d.groups[s.id]}; });
+      if(d.groups) REG_SLOTS.forEach(s=>{ const g=d.groups[s.id]; if(!g) return;
+        if(g.cases){ regState[s.id]={reg:!!g.reg,count:Math.max(1,parseInt(g.count)||1),cases:g.cases.map(c=>({name:c.name||"",status:c.status||"作成中",hyo:!!c.hyo}))}; }
+        else { regState[s.id]={reg:!!g.reg,count:Math.max(1,parseInt(g.count)||1),cases:[{name:g.name||"",status:g.status||"作成中",hyo:!!g.hyo}]}; }
+        syncCases(regState[s.id]); });
       document.getElementById('rOut').value=d.out||0;
       document.getElementById('rShoki').value=d.shoki||0;
     }
   }catch(e){ /* no saved data yet */ }
 }
 
+function mkCase(){return {name:"",status:"作成中",hyo:false};}
+function syncCases(rs){ if(!rs.cases) rs.cases=[mkCase()]; rs.count=Math.max(1,parseInt(rs.count)||1); while(rs.cases.length<rs.count) rs.cases.push(mkCase()); if(rs.cases.length>rs.count) rs.cases.length=rs.count; }
+function caseTint(rs){ return (rs.cases&&rs.cases.length&&rs.cases.every(c=>c.status==='作成済み'))?'作成済み':'作成中'; }
+function casesHTML(id){ const rs=regState[id]; syncCases(rs); const multi=rs.count>1; return rs.cases.map((c,ci)=>`
+        <div class="case-row">
+          ${multi?`<span class="case-no">#${ci+1}</span>`:''}
+          <input type="text" class="cName" data-ci="${ci}" placeholder="病名メモ（任意）" value="${escapeHtml(c.name||'')}">
+          <select class="cStatus" data-ci="${ci}">
+            <option value="作成中" ${c.status==='作成中'?'selected':''}>作成中</option>
+            <option value="作成済み" ${c.status==='作成済み'?'selected':''}>作成済み</option>
+          </select>
+          <label class="rg-hyo"><input type="checkbox" class="cHyo" data-ci="${ci}" ${c.hyo?'checked':''}> ★要約候補</label>
+        </div>`).join(''); }
+function wireCases(box,id,row){
+  box.querySelectorAll('.cName').forEach(el=>el.addEventListener('input',()=>{regState[id].cases[+el.dataset.ci].name=el.value;queueSaveReg();}));
+  box.querySelectorAll('.cStatus').forEach(el=>el.addEventListener('change',()=>{regState[id].cases[+el.dataset.ci].status=el.value;row.dataset.rst=caseTint(regState[id]);queueSaveReg();recomputeReg();}));
+  box.querySelectorAll('.cHyo').forEach(el=>el.addEventListener('change',()=>{regState[id].cases[+el.dataset.ci].hyo=el.checked;queueSaveReg();recomputeReg();}));
+}
 function buildRegUI(){
   const root=document.getElementById('regfields'); root.innerHTML="";
   REG_FIELDS.forEach((fd,fi)=>{
@@ -751,25 +777,17 @@ function buildRegUI(){
       <span class="cov" data-rcov="${fd.f}">0/${total}</span>`;
     wrap.appendChild(head);
     fd.groups.forEach((g,gi)=>{
-      const id="r"+fi+"_"+gi, rs=regState[id];
-      const row=document.createElement('div'); row.className='regrow'+(rs.reg?' on':''); row.dataset.id=id; row.dataset.rst=rs.status;
+      const id="r"+fi+"_"+gi, rs=regState[id]; syncCases(rs);
+      const row=document.createElement('div'); row.className='regrow'+(rs.reg?' on':''); row.dataset.id=id; row.dataset.rst=caseTint(rs);
       row.innerHTML=`
         <label class="rg-reg"><input type="checkbox" class="cReg" ${rs.reg?'checked':''}> <span class="rg-name">${g.g}</span></label>
         <span class="rg-eg">${g.eg}</span>
-        <span class="rg-extra">
-          <input type="text" class="cName" placeholder="病名メモ（任意）" value="${escapeHtml(rs.name||'')}">
-          件数 <input type="number" class="cCount" min="1" value="${rs.count}">
-          <select class="cStatus">
-            <option value="作成中" ${rs.status==='作成中'?'selected':''}>作成中</option>
-            <option value="作成済み" ${rs.status==='作成済み'?'selected':''}>作成済み</option>
-          </select>
-          <label class="rg-hyo"><input type="checkbox" class="cHyo" ${rs.hyo?'checked':''}> ★要約候補</label>
-        </span>`;
+        <span class="rg-extra">件数 <input type="number" class="cCount" min="1" value="${rs.count}"></span>
+        <div class="cases" data-cases="${id}">${casesHTML(id)}</div>`;
+      const casesBox=row.querySelector('.cases');
       row.querySelector('.cReg').addEventListener('change',e=>{regState[id].reg=e.target.checked;row.classList.toggle('on',e.target.checked);queueSaveReg();recomputeReg();});
-      row.querySelector('.cName').addEventListener('input',e=>{regState[id].name=e.target.value;queueSaveReg();});
-      row.querySelector('.cCount').addEventListener('input',e=>{regState[id].count=Math.max(1,parseInt(e.target.value)||1);queueSaveReg();recomputeReg();});
-      row.querySelector('.cStatus').addEventListener('change',e=>{regState[id].status=e.target.value;row.dataset.rst=e.target.value;queueSaveReg();recomputeReg();});
-      row.querySelector('.cHyo').addEventListener('change',e=>{regState[id].hyo=e.target.checked;queueSaveReg();recomputeReg();});
+      row.querySelector('.cCount').addEventListener('input',e=>{regState[id].count=Math.max(1,parseInt(e.target.value)||1);syncCases(regState[id]);casesBox.innerHTML=casesHTML(id);wireCases(casesBox,id,row);row.dataset.rst=caseTint(regState[id]);queueSaveReg();recomputeReg();});
+      wireCases(casesBox,id,row);
       wrap.appendChild(row);
     });
     root.appendChild(wrap);
@@ -782,7 +800,7 @@ function setNote(id,msg,ok){
 
 function recomputeReg(){
   let covered=0,total=0,hyo=0,done=0,prog=0;
-  REG_SLOTS.forEach(s=>{const rs=regState[s.id]; if(rs.reg){covered++; total+=(rs.count||1); if(rs.status==='作成済み') done++; else prog++;} if(rs.hyo) hyo++;});
+  REG_SLOTS.forEach(s=>{const rs=regState[s.id]; if(rs.reg){covered++; syncCases(rs); total+=rs.count; rs.cases.forEach(c=>{ if(c.hyo) hyo++; if(c.status==='作成済み') done++; else prog++; });}});
   document.getElementById('rgN').textContent=covered;
   document.getElementById('rgBar').style.width=Math.min(covered/70*100,100)+"%";
   setNote('rgNote', covered>=56?('修了要件クリア（'+covered+'群）✓'):('修了要件：56群以上（あと'+(56-covered)+'群）'), covered>=56);
@@ -803,13 +821,13 @@ function recomputeReg(){
     cov.textContent=c+"/"+tot+"（50%:"+need+"群）";
     cov.classList.toggle('met', c>=need);
   });
-  document.getElementById('pickline').textContent="★要約候補に選択："+hyo+"群　／　病歴要約は領域別26篇＋外科紹介2・剖検1＝計29篇";
-  document.getElementById('statusline').textContent="登録の作成状況：作成済み "+done+"群 ／ 作成中 "+prog+"群";
+  document.getElementById('pickline').textContent="★要約候補に選択："+hyo+"件　／　病歴要約は領域別26篇＋外科紹介2・剖検1＝計29篇";
+  document.getElementById('statusline').textContent="登録の作成状況：作成済み "+done+"件 ／ 作成中 "+prog+"件";
 }
 
 document.getElementById('resetRegBtn').addEventListener('click',()=>{
   if(!confirm('症例登録の入力をすべて消去します。よろしいですか？')) return;
-  REG_SLOTS.forEach(s=> regState[s.id]={reg:false,count:1,hyo:false,status:"作成中",name:""});
+  REG_SLOTS.forEach(s=> regState[s.id]={reg:false,count:1,cases:[mkCase()]});
   document.getElementById('rOut').value=0; document.getElementById('rShoki').value=0;
   try{ localStorage.removeItem(KEY_REG); }catch(e){}
   buildRegUI(); recomputeReg();
