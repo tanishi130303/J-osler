@@ -1,0 +1,10 @@
+{
+  "name": "内科",
+  "short_name": "内科",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f4f1ea",
+  "theme_color": "#0f5a52",
+  "lang": "ja"
+}
