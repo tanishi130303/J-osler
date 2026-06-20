@@ -186,7 +186,7 @@
   .regrow.on[data-rst="記載途中"]{border-left-color:var(--g-amber)}
   .regrow.on[data-rst="仮完成"]{border-left-color:var(--g-indigo)}
   .regrow.on[data-rst="送信済み"]{border-left-color:var(--g-teal)}
-  .regrow.on[data-rst="承認済"]{background:linear-gradient(90deg,rgba(46,139,87,.10),transparent);border-left-color:var(--g-green)}
+  .regrow.on[data-rst="承認済"]{border-left-color:var(--g-green);background:linear-gradient(90deg,rgba(46,139,87,.10),transparent)}
   .rg-reg{display:flex;align-items:center;gap:8px;cursor:pointer;flex:1;min-width:210px}
   .rg-reg input{width:17px;height:17px;accent-color:var(--teal-bright);cursor:pointer;flex-shrink:0}
   .rg-name{font-size:.82rem;font-weight:500}
@@ -202,6 +202,7 @@
   .case-row{display:flex;align-items:center;gap:8px 12px;flex-wrap:wrap;padding:6px 0}
   .case-row + .case-row{border-top:1px dotted var(--line)}
   .case-no{font-family:"Noto Serif JP",serif;font-weight:700;font-size:.72rem;color:#fff;background:var(--teal);min-width:32px;height:22px;display:inline-flex;align-items:center;justify-content:center;border-radius:5px}
+  .regrow .cGrpFree{flex:1;min-width:180px;font-family:inherit;font-size:.82rem;padding:6px 8px;border:1px solid var(--line);border-radius:6px;background:#fff;color:var(--ink)}
   .statusline{font-size:.78rem;color:var(--ink-soft);margin-top:4px}
   .prog-row{margin-bottom:16px}
   .prog-head{display:flex;justify-content:space-between;align-items:baseline;font-size:.78rem;color:var(--ink-soft);margin-bottom:6px}
@@ -215,6 +216,16 @@
   .prog-legend .ps-item{display:inline-flex;align-items:center;gap:5px}
   .prog-legend .ps-item i{width:10px;height:10px;border-radius:2px}
   .prog-legend .ps-item b{color:var(--ink);font-variant-numeric:tabular-nums}
+  /* 要約候補（各科カード内に表示） */
+  .fld-cand{padding:8px 16px 12px;background:#fffaf0;border-bottom:1px solid var(--line)}
+  .fld-cand .fc-title{font-size:.72rem;font-weight:700;color:var(--gold);margin-bottom:4px}
+  .fld-cand .fc-title b{font-variant-numeric:tabular-nums}
+  .cand-row{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;font-size:.74rem;padding:4px 6px;border-bottom:1px dotted var(--line)}
+  .cand-row:last-child{border-bottom:none}
+  .cand-g{color:var(--ink-soft)}
+  .cand-dx{color:var(--ink);font-weight:600}
+  .cand-id{margin-left:auto;font-size:.68rem;color:var(--ink-soft);background:rgba(15,90,82,.08);padding:1px 6px;border-radius:4px}
+  .cand-empty{font-size:.72rem;color:var(--ink-soft);padding:2px 6px}
   .statusbreak{margin-top:16px}
   .sb-title{font-size:.8rem;font-weight:600;color:var(--ink);margin-bottom:6px}
   .sb-bar{display:flex;height:14px;border-radius:7px;overflow:hidden;background:var(--line)}
@@ -235,6 +246,7 @@
   .field-head .ccnt{font-size:.74rem;color:var(--ink-soft);font-variant-numeric:tabular-nums}
   .field-head .ccnt.met{color:var(--g-green);font-weight:700}
   .pickline{font-size:.78rem;color:var(--gold);margin-top:12px;font-weight:500}
+  .freenote{padding:9px 16px;font-size:.74rem;color:var(--ink-soft);background:#fcfaf4;border-bottom:1px solid var(--line);line-height:1.6}
 </style>
 </head>
 <body>
@@ -281,6 +293,12 @@
           <div class="bar"><i id="rtBar"></i></div>
           <div class="note" id="rtNote">修了要件：120症例以上</div>
         </div>
+        <div class="card" id="rc-hyo">
+          <div class="k">病歴要約（完了）</div>
+          <div class="v"><span id="rcHyoN">0</span><small> / 29 篇</small></div>
+          <div class="bar"><i id="rcHyoBar"></i></div>
+          <div class="note" id="rcHyoNote">②病歴要約タブの完了数</div>
+        </div>
         <div class="card" id="rc-out">
           <div class="k">うち外来症例（上限 1割）</div>
           <div class="v"><span id="rOutN">0</span><small> 症例</small></div>
@@ -321,6 +339,7 @@
             <li><b>外来症例は登録症例の1割まで</b>。修了認定には<b>入院症例を108例以上</b>登録する必要がある。</li>
             <li><b>初期研修（研修医時代）の症例は最大60症例まで</b>。同一症例・同一期間は1名の専攻医のみ登録可。</li>
             <li>病歴要約は<b>この登録症例の中から</b>29篇を選ぶ。各群の「★要約候補」に印を付けて整理できる。</li>
+            <li>外科紹介症例・剖検症例は<b>総登録症例数には数える</b>が、疾患群数（70群）にはカウントしない（他疾患群と重複可のため）。</li>
           </ul>
         </div>
       </details>
@@ -382,15 +401,15 @@
           <thead><tr><th>分野</th><th>必要数</th><th>補足</th></tr></thead>
           <tbody>
             <tr><td>総合内科（一般）</td><td class="num">2</td><td>—</td></tr>
-            <tr><td>総合内科（高齢者）</td><td class="num">1</td><td>—</td></tr>
             <tr><td>消化器</td><td class="num">3</td><td>消化管・肝臓・胆膵 を各1篇以上。急性腹症（疾患群9）は消化管枠に不可</td></tr>
             <tr><td>循環器</td><td class="num">3</td><td>—</td></tr>
             <tr><td>内分泌・代謝</td><td class="num">3</td><td>—</td></tr>
             <tr><td>腎臓</td><td class="num">2</td><td>—</td></tr>
-            <tr><td>呼吸器</td><td class="num">2</td><td>—</td></tr>
+            <tr><td>呼吸器</td><td class="num">3</td><td>—</td></tr>
             <tr><td>血液</td><td class="num">2</td><td>—</td></tr>
             <tr><td>神経</td><td class="num">2</td><td>—</td></tr>
-            <tr><td>アレルギー・膠原病</td><td class="num">2</td><td>—</td></tr>
+            <tr><td>アレルギー</td><td class="num">1</td><td>—</td></tr>
+            <tr><td>膠原病</td><td class="num">1</td><td>—</td></tr>
             <tr><td>感染症</td><td class="num">2</td><td>—</td></tr>
             <tr><td>救急</td><td class="num">2</td><td>—</td></tr>
             <tr><td>外科紹介症例</td><td class="num">2</td><td>外科コンサルトで手術に至った例。疾患群の重複可</td></tr>
@@ -437,15 +456,15 @@
 <script>
 const FIELDS = [
   {f:"総合内科（一般）", n:2},
-  {f:"総合内科（高齢者）", n:1},
   {f:"消化器", n:3, hints:["消化管","肝臓","胆・膵"]},
   {f:"循環器", n:3},
   {f:"内分泌・代謝", n:3},
   {f:"腎臓", n:2},
-  {f:"呼吸器", n:2},
+  {f:"呼吸器", n:3},
   {f:"血液", n:2},
   {f:"神経", n:2},
-  {f:"アレルギー・膠原病", n:2},
+  {f:"アレルギー", n:1},
+  {f:"膠原病", n:1},
   {f:"感染症", n:2},
   {f:"救急", n:2},
   {f:"外科紹介症例", n:2, dup:true},
@@ -468,7 +487,25 @@ FIELDS.forEach((fd,fi)=>{
 });
 
 let state = {}; // id -> {dx, group, out, shoki, status}
-SLOTS.forEach(s=> state[s.id] = {dx:"",group:"",out:false,shoki:false,status:"未着手"});
+SLOTS.forEach(s=> state[s.id] = {pid:"",dx:"",group:"",out:false,shoki:false,status:"未着手"});
+
+// トラッカー分野 → 症例登録の科（A案：要約候補の取り込み元）
+const HYO_CAND_MAP = {
+  "総合内科（一般）":["総合内科"],
+  "消化器":["消化器"],
+  "循環器":["循環器"],
+  "内分泌・代謝":["内分泌","代謝"],
+  "腎臓":["腎臓"],
+  "呼吸器":["呼吸器"],
+  "血液":["血液"],
+  "神経":["神経"],
+  "アレルギー":["アレルギー"],
+  "膠原病":["膠原病"],
+  "感染症":["感染症"],
+  "救急":["救急"],
+  "外科紹介症例":["外科紹介症例"],
+  "剖検症例":["剖検症例"],
+};
 
 // 疾患群の内訳（分野ごと）: g=疾患群名, eg=代表的な疾患（症例探し用）
 const REFERENCE = {
@@ -562,7 +599,6 @@ const REFERENCE = {
 };
 const NOTES = {
   "総合内科（一般）":"臓器別の番号疾患群ではなく、複数臓器にまたがる病態・原因不明の発熱・全身性疾患などが対象。主病名は他分野の疾患群と重複しないものを選ぶ。",
-  "総合内科（高齢者）":"高齢者の多疾患併存・老年症候群（転倒・低栄養・認知機能低下・ポリファーマシー等）を含む複雑な病態が対象。",
   "外科紹介症例":"外科コンサルトで手術に至った症例。疾患群は他の病歴要約と重複してよい（自由記載）。",
   "剖検症例":"病理解剖を行い主担当した症例。疾患群は他の病歴要約と重複してよい（自由記載）。",
 };
@@ -603,6 +639,11 @@ function buildUI(){
       <span class="fcount" data-fcount="${fd.f}">0/${fd.n}</span>`;
     wrap.appendChild(head);
 
+    // ★要約候補（症例登録から自動反映）— 各科カード内に表示
+    const cand=document.createElement('div'); cand.className='fld-cand'; cand.dataset.cand=fd.f;
+    cand.innerHTML=`<div class="fc-title">症例登録の★要約候補 <b data-candn="${fd.f}">0</b> 件（自動反映）</div><div data-candlist="${fd.f}"></div>`;
+    wrap.appendChild(cand);
+
     // 疾患群の内訳（参照パネル）
     const ref = REFERENCE[fd.f];
     if(ref){
@@ -641,6 +682,7 @@ function buildUI(){
           <span class="dup-tag">疾患群が重複</span>
         </div>
         <div class="slot-grid">
+          <label class="fld full"><span class="lbl">患者ID</span><input type="text" class="pid" placeholder="患者ID（任意）" value="${escapeHtml(st.pid||'')}"></label>
           <label class="fld full"><span class="lbl">主病名</span><input type="text" class="dx" placeholder="例：感染性腸炎" value="${escapeHtml(st.dx)}"></label>
           <label class="fld"><span class="lbl">疾患群 ▾</span>${grpControl}</label>
           <label class="fld"><span class="lbl">状態</span><select class="st">
@@ -652,6 +694,7 @@ function buildUI(){
           </div>
         </div>`;
       // events
+      slot.querySelector('.pid').addEventListener('input',e=>{state[s.id].pid=e.target.value;queueSave();});
       slot.querySelector('.dx').addEventListener('input',e=>{state[s.id].dx=e.target.value;queueSave();recompute();});
       const grpEl=slot.querySelector('.grp');
       grpEl.addEventListener('input',e=>{state[s.id].group=e.target.value;queueSave();recompute();});
@@ -667,6 +710,30 @@ function buildUI(){
 
 function escapeHtml(s){return (s||"").replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
 
+// 各科カード内の★要約候補リストを描画（症例登録から取り込み）
+function renderHyoCandidatesPerField(){
+  FIELDS.forEach(fd=>{
+    const listEl=document.querySelector(`[data-candlist="${fd.f}"]`);
+    const numEl=document.querySelector(`[data-candn="${fd.f}"]`);
+    if(!listEl) return;
+    const srcFields = HYO_CAND_MAP[fd.f] || [];
+    const rows=[];
+    if(typeof REG_FIELDS!=='undefined'){
+      REG_FIELDS.forEach((rf,rfi)=>{
+        if(!srcFields.includes(rf.f)) return;
+        rf.groups.forEach((g,gi)=>{
+          const rs=regState["r"+rfi+"_"+gi];
+          if(rs&&rs.reg){ syncCases(rs); rs.cases.forEach(c=>{ if(c.hyo) rows.push({grp:g.g,name:c.name,cid:c.cid}); }); }
+        });
+      });
+    }
+    if(numEl) numEl.textContent=rows.length;
+    listEl.innerHTML = rows.length
+      ? rows.map(it=>`<div class="cand-row"><span class="cand-g">${escapeHtml(it.grp)}</span><span class="cand-dx">${escapeHtml(it.name||'（病名未入力）')}</span>${it.cid?`<span class="cand-id">${escapeHtml(it.cid)}</span>`:''}</div>`).join('')
+      : '<div class="cand-empty">症例登録タブで「★要約候補」にチェックすると、ここに自動表示されます。</div>';
+  });
+}
+
 function recompute(){
   let done=0,started=0,out=0,shoki=0;
   SLOTS.forEach(s=>{
@@ -680,6 +747,8 @@ function recompute(){
   const pct=done/29;
   document.getElementById('ringNum').textContent=done;
   document.getElementById('ringFill').style.strokeDashoffset = 251.2*(1-pct);
+  const _rh=document.getElementById('rcHyoN'); if(_rh) _rh.textContent=done;
+  const _rhb=document.getElementById('rcHyoBar'); if(_rhb) _rhb.style.width=Math.min(done/29*100,100)+"%";
   // started
   document.getElementById('startedN').textContent=started;
   document.getElementById('startedBar').style.width=(started/29*100)+"%";
@@ -741,9 +810,9 @@ function toggleWarn(cardId,isWarn,noteId,msg){
 
 document.getElementById('resetBtn').addEventListener('click',()=>{
   if(!confirm('入力したすべての内容を消去します。よろしいですか？')) return;
-  SLOTS.forEach(s=> state[s.id]={dx:"",group:"",out:false,shoki:false,status:"未着手"});
+  SLOTS.forEach(s=> state[s.id]={pid:"",dx:"",group:"",out:false,shoki:false,status:"未着手"});
   try{ localStorage.removeItem(KEY); }catch(e){}
-  buildUI(); recompute();
+  buildUI(); recompute(); renderHyoCandidatesPerField();
   document.getElementById('savedLabel').textContent="リセットしました";
 });
 
@@ -768,6 +837,8 @@ const REG_FIELDS=[
   {f:"膠原病", groups:stripPre(REFERENCE["アレルギー・膠原病"],"膠原病")},
   {f:"感染症", groups:REFERENCE["感染症"]},
   {f:"救急", groups:REFERENCE["救急"]},
+  {f:"外科紹介症例", free:true, groups:[{g:"外科紹介症例（自由記載）", eg:"外科コンサルトで手術に至った例。疾患群名は自由に入力できます。"}]},
+  {f:"剖検症例", free:true, groups:[{g:"剖検症例（自由記載）", eg:"病理解剖を行い主担当した例。疾患群名は自由に入力できます。"}]},
 ];
 const FIELD_MIN={"総合内科":10,"消化器":10,"循環器":10,"内分泌":3,"代謝":10,"腎臓":10,"呼吸器":10,"血液":3,"神経":10,"アレルギー":3,"膠原病":3,"感染症":8,"救急":10};
 const FIELD_GRP_MIN={"総合内科":3,"消化器":5,"循環器":5,"内分泌":2,"代謝":3,"腎臓":4,"呼吸器":4,"血液":2,"神経":5,"アレルギー":1,"膠原病":1,"感染症":2,"救急":4};
@@ -775,9 +846,9 @@ const KEY_REG="josler-reg-v1";
 const REG_STATUSES=["症例確保・未記載","記載途中","仮完成","送信済み","承認済"];
 const STATUS_COLOR={"症例確保・未記載":"var(--g-gray)","記載途中":"var(--g-amber)","仮完成":"var(--g-indigo)","送信済み":"var(--g-teal)","承認済":"var(--g-green)"};
 let REG_SLOTS=[];
-REG_FIELDS.forEach((fd,fi)=> fd.groups.forEach((g,gi)=> REG_SLOTS.push({id:"r"+fi+"_"+gi, fi, gi, field:fd.f, g:g.g, eg:g.eg})));
+REG_FIELDS.forEach((fd,fi)=> fd.groups.forEach((g,gi)=> REG_SLOTS.push({id:"r"+fi+"_"+gi, fi, gi, field:fd.f, g:g.g, eg:g.eg, free:!!fd.free})));
 let regState={};
-REG_SLOTS.forEach(s=> regState[s.id]={reg:false,count:1,cases:[mkCase()]});
+REG_SLOTS.forEach(s=> regState[s.id]={reg:false,count:1,gfree:"",cases:[mkCase()]});
 
 let saveTimerReg=null;
 function saveReg(){
@@ -797,8 +868,8 @@ function loadReg(){
     if(v){
       const d=JSON.parse(v);
       if(d.groups) REG_SLOTS.forEach(s=>{ const g=d.groups[s.id]; if(!g) return;
-        if(g.cases){ regState[s.id]={reg:!!g.reg,count:Math.max(1,parseInt(g.count)||1),cases:g.cases.map(c=>({name:c.name||"",cid:c.cid||"",status:normStatus(c.status),hyo:!!c.hyo,shoki:!!c.shoki,out:!!c.out}))}; }
-        else { regState[s.id]={reg:!!g.reg,count:Math.max(1,parseInt(g.count)||1),cases:[{name:g.name||"",cid:"",status:normStatus(g.status),hyo:!!g.hyo,shoki:false,out:false}]}; }
+        if(g.cases){ regState[s.id]={reg:!!g.reg,count:Math.max(1,parseInt(g.count)||1),gfree:g.gfree||"",cases:g.cases.map(c=>({name:c.name||"",cid:c.cid||"",status:normStatus(c.status),hyo:!!c.hyo,shoki:!!c.shoki,out:!!c.out}))}; }
+        else { regState[s.id]={reg:!!g.reg,count:Math.max(1,parseInt(g.count)||1),gfree:g.gfree||"",cases:[{name:g.name||"",cid:"",status:normStatus(g.status),hyo:!!g.hyo,shoki:false,out:false}]}; }
         syncCases(regState[s.id]); });
     }
   }catch(e){ /* no saved data yet */ }
@@ -821,8 +892,8 @@ function casesHTML(id){ const rs=regState[id]; syncCases(rs); const multi=rs.cou
           <label class="rg-out"><input type="checkbox" class="cOut" data-ci="${ci}" ${c.out?'checked':''}> 外来</label>
         </div>`).join(''); }
 function wireCases(box,id,row){
-  box.querySelectorAll('.cName').forEach(el=>el.addEventListener('input',()=>{regState[id].cases[+el.dataset.ci].name=el.value;queueSaveReg();}));
-  box.querySelectorAll('.cId').forEach(el=>el.addEventListener('input',()=>{regState[id].cases[+el.dataset.ci].cid=el.value;queueSaveReg();}));
+  box.querySelectorAll('.cName').forEach(el=>el.addEventListener('input',()=>{regState[id].cases[+el.dataset.ci].name=el.value;queueSaveReg();renderHyoCandidatesPerField();}));
+  box.querySelectorAll('.cId').forEach(el=>el.addEventListener('input',()=>{regState[id].cases[+el.dataset.ci].cid=el.value;queueSaveReg();renderHyoCandidatesPerField();}));
   box.querySelectorAll('.cStatus').forEach(el=>el.addEventListener('change',()=>{regState[id].cases[+el.dataset.ci].status=el.value;row.dataset.rst=caseTint(regState[id]);queueSaveReg();recomputeReg();}));
   box.querySelectorAll('.cHyo').forEach(el=>el.addEventListener('change',()=>{regState[id].cases[+el.dataset.ci].hyo=el.checked;queueSaveReg();recomputeReg();}));
   box.querySelectorAll('.cShoki').forEach(el=>el.addEventListener('change',()=>{regState[id].cases[+el.dataset.ci].shoki=el.checked;queueSaveReg();recomputeReg();}));
@@ -834,23 +905,44 @@ function buildRegUI(){
     const total=fd.groups.length, need=Math.ceil(total/2);
     const wrap=document.createElement('div'); wrap.className='field';
     const head=document.createElement('div'); head.className='field-head';
-    head.innerHTML=`<span class="fname">${fd.f}</span>
-      <span class="req">${total}群</span>
-      <div class="fbar"><i data-rfield="${fd.f}"></i></div>
-      <span class="cov" data-rcov="${fd.f}">0/${total}</span>
-      <span class="ccnt" data-rccnt="${fd.f}">症例 0/${FIELD_MIN[fd.f]||0}</span>`;
+    if(fd.free){
+      head.innerHTML=`<span class="fname">${fd.f}</span>
+        <span class="req">病歴要約：${fd.f==='外科紹介症例'?'2篇':'1篇'}</span>
+        <div class="fbar"><i data-rfield="${fd.f}"></i></div>
+        <span class="ccnt" data-rccnt="${fd.f}">0症例</span>`;
+    } else {
+      head.innerHTML=`<span class="fname">${fd.f}</span>
+        <span class="req">${total}群</span>
+        <div class="fbar"><i data-rfield="${fd.f}"></i></div>
+        <span class="ccnt" data-rccnt="${fd.f}">0/${FIELD_MIN[fd.f]||0}症例（0/${FIELD_GRP_MIN[fd.f]||need}群）</span>`;
+    }
     wrap.appendChild(head);
+    if(fd.free){
+      const note=document.createElement('div'); note.className='freenote';
+      note.textContent="📝 "+(fd.f==='外科紹介症例'?"外科コンサルトで手術に至った症例。疾患群名は自由に入力できます。総登録症例数には数えますが、疾患群数（70群）にはカウントしません。":"病理解剖を行い主担当した症例。疾患群名は自由に入力できます。総登録症例数には数えますが、疾患群数（70群）にはカウントしません。");
+      wrap.appendChild(note);
+    }
     fd.groups.forEach((g,gi)=>{
       const id="r"+fi+"_"+gi, rs=regState[id]; syncCases(rs);
       const row=document.createElement('div'); row.className='regrow'+(rs.reg?' on':''); row.dataset.id=id; row.dataset.rst=caseTint(rs);
-      row.innerHTML=`
-        <label class="rg-reg"><input type="checkbox" class="cReg" ${rs.reg?'checked':''}> <span class="rg-name">${g.g}</span></label>
-        <span class="rg-eg">${g.eg}</span>
-        <span class="rg-extra">件数 <input type="number" class="cCount" min="1" value="${rs.count}"></span>
-        <div class="cases" data-cases="${id}">${casesHTML(id)}</div>`;
+      if(fd.free){
+        row.innerHTML=`
+          <label class="rg-reg"><input type="checkbox" class="cReg" ${rs.reg?'checked':''}> <span class="rg-name">この枠を使う</span></label>
+          <input type="text" class="cGrpFree" placeholder="疾患群名（自由記載）" value="${escapeHtml(rs.gfree||'')}">
+          <span class="rg-extra">件数 <input type="number" class="cCount" min="1" value="${rs.count}"></span>
+          <div class="cases" data-cases="${id}">${casesHTML(id)}</div>`;
+      } else {
+        row.innerHTML=`
+          <label class="rg-reg"><input type="checkbox" class="cReg" ${rs.reg?'checked':''}> <span class="rg-name">${g.g}</span></label>
+          <span class="rg-eg">${g.eg}</span>
+          <span class="rg-extra">件数 <input type="number" class="cCount" min="1" value="${rs.count}"></span>
+          <div class="cases" data-cases="${id}">${casesHTML(id)}</div>`;
+      }
       const casesBox=row.querySelector('.cases');
       row.querySelector('.cReg').addEventListener('change',e=>{regState[id].reg=e.target.checked;row.classList.toggle('on',e.target.checked);queueSaveReg();recomputeReg();});
       row.querySelector('.cCount').addEventListener('input',e=>{regState[id].count=Math.max(1,parseInt(e.target.value)||1);syncCases(regState[id]);casesBox.innerHTML=casesHTML(id);wireCases(casesBox,id,row);row.dataset.rst=caseTint(regState[id]);queueSaveReg();recomputeReg();});
+      const gfreeEl=row.querySelector('.cGrpFree');
+      if(gfreeEl) gfreeEl.addEventListener('input',e=>{regState[id].gfree=e.target.value;queueSaveReg();renderHyoCandidatesPerField();});
       wireCases(casesBox,id,row);
       wrap.appendChild(row);
     });
@@ -871,10 +963,11 @@ function renderStatusBreak(sc,gsc,total,covered){
   if(gf) gf.innerHTML=REG_STATUSES.map(s=> (gsc[s]? `<span style="width:${Math.min(gsc[s]/70*100,100)}%;background:${STATUS_COLOR[s]}" title="${s} ${gsc[s]}群"></span>` : '')).join('');
   if(leg) leg.innerHTML=REG_STATUSES.map(s=>`<span class="ps-item"><i style="background:${STATUS_COLOR[s]}"></i>${s} <b>${sc[s]||0}</b>件 / <b>${gsc[s]||0}</b>群</span>`).join('');
 }
+
 function recomputeReg(){
   let covered=0,total=0,hyo=0,shokiN=0,outN=0;
   const sc={}, gsc={}; REG_STATUSES.forEach(s=>{sc[s]=0; gsc[s]=0;});
-  REG_SLOTS.forEach(s=>{const rs=regState[s.id]; if(rs.reg){covered++; syncCases(rs); total+=rs.count; gsc[caseTint(rs)]=(gsc[caseTint(rs)]||0)+1; rs.cases.forEach(c=>{ if(c.hyo) hyo++; if(c.shoki) shokiN++; if(c.out) outN++; sc[c.status]=(sc[c.status]||0)+1; });}});
+  REG_SLOTS.forEach(s=>{const rs=regState[s.id]; if(rs.reg){ if(!s.free) covered++; syncCases(rs); total+=rs.count; gsc[caseTint(rs)]=(gsc[caseTint(rs)]||0)+1; rs.cases.forEach(c=>{ if(c.hyo) hyo++; if(c.shoki) shokiN++; if(c.out) outN++; sc[c.status]=(sc[c.status]||0)+1; });}});
   document.getElementById('rgN').textContent=covered;
   document.getElementById('rgBar').style.width=Math.min(covered/70*100,100)+"%";
   setNote('rgNote', covered>=56?('修了要件クリア（'+covered+'群）✓'):('修了要件：56群以上（あと'+(56-covered)+'群）'), covered>=56);
@@ -889,22 +982,29 @@ function recomputeReg(){
   document.getElementById('rShokiBar').style.width=Math.min(shokiN/60*100,100)+"%";
   toggleWarn('rc-shoki', shokiN>60, 'rShokiNote', shokiN>60?'上限60症例を超過':'各症例のチェックから自動集計（上限60）');
   REG_FIELDS.forEach((fd,fi)=>{
-    const tot=fd.groups.length, need=FIELD_GRP_MIN[fd.f]||Math.ceil(tot/2); let c=0, cases=0;
+    const tot=fd.groups.length, need=FIELD_GRP_MIN[fd.f]||Math.ceil(tot/2), fmin=FIELD_MIN[fd.f]||0; let c=0, cases=0;
     fd.groups.forEach((g,gi)=>{ const rs=regState["r"+fi+"_"+gi]; if(rs.reg){ c++; cases+=rs.count; } });
-    document.querySelector(`[data-rfield="${fd.f}"]`).style.width=(c/tot*100)+"%";
-    const cov=document.querySelector(`[data-rcov="${fd.f}"]`);
-    cov.textContent="疾患群 "+c+"/"+tot+"（必要"+need+"群）";
-    cov.classList.toggle('met', c>=need);
-    const mn=FIELD_MIN[fd.f]||0, cc=document.querySelector(`[data-rccnt="${fd.f}"]`);
-    if(cc){ cc.textContent="症例 "+cases+"/"+mn; cc.classList.toggle('met', cases>=mn); }
+    const fbar=document.querySelector(`[data-rfield="${fd.f}"]`);
+    const cc=document.querySelector(`[data-rccnt="${fd.f}"]`);
+    if(fd.free){
+      if(fbar) fbar.style.width=(cases>0?100:0)+"%";
+      if(cc){ cc.textContent=cases+"症例"; cc.classList.toggle('met', cases>0); }
+    } else {
+      if(fbar) fbar.style.width=(fmin>0?Math.min(cases/fmin*100,100):0)+"%";
+      if(cc){
+        cc.textContent=cases+"/"+fmin+"症例（"+c+"/"+need+"群）";
+        cc.classList.toggle('met', cases>=fmin && c>=need);
+      }
+    }
   });
   document.getElementById('pickline').textContent="★要約候補に選択："+hyo+"件　／　病歴要約は領域別26篇＋外科紹介2・剖検1＝計29篇";
   renderStatusBreak(sc,gsc,total,covered);
+  renderHyoCandidatesPerField();
 }
 
 document.getElementById('resetRegBtn').addEventListener('click',()=>{
   if(!confirm('症例登録の入力をすべて消去します。よろしいですか？')) return;
-  REG_SLOTS.forEach(s=> regState[s.id]={reg:false,count:1,cases:[mkCase()]});
+  REG_SLOTS.forEach(s=> regState[s.id]={reg:false,count:1,gfree:"",cases:[mkCase()]});
   try{ localStorage.removeItem(KEY_REG); }catch(e){}
   buildRegUI(); recomputeReg();
   document.getElementById('savedLabel2').textContent="リセットしました";
@@ -921,6 +1021,7 @@ document.querySelectorAll('.tab').forEach(b=>b.addEventListener('click',()=>{
   load(); buildUI(); recompute();
   loadReg(); buildRegUI();
   recomputeReg();
+  renderHyoCandidatesPerField();
 })();
 </script>
 <script>
