@@ -75,6 +75,17 @@
   .card.warn .bar i{background:var(--clay)}
   .card .note{font-size:.66rem;color:var(--clay);margin-top:6px;min-height:1px}
   .card .note.ok{color:var(--g-green)}
+  .mini-break{margin-top:8px}
+  .mini-break>summary{cursor:pointer;color:var(--ink-soft);list-style:none;user-select:none;font-size:.68rem;padding:2px 0}
+  .mini-break>summary::-webkit-details-marker{display:none}
+  .mini-break>summary::before{content:"▸ ";color:var(--gold)}
+  .mini-break[open]>summary::before{content:"▾ "}
+  .mb-list{margin-top:4px;display:flex;flex-direction:column;gap:3px}
+  .mb-row{display:flex;align-items:center;gap:5px;font-size:.68rem;color:var(--ink-soft)}
+  .mb-row i{width:8px;height:8px;border-radius:2px;flex:0 0 auto}
+  .mb-row span{flex:1 1 auto;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .mb-row b{color:var(--ink);font-variant-numeric:tabular-nums}
+  .mb-row em{color:var(--ink-soft);font-style:normal}
 
   /* conditions table */
   details.cond{background:var(--card);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow);overflow:hidden}
@@ -171,8 +182,11 @@
   /* registration rows */
   .regrow{display:flex;align-items:center;gap:8px 14px;padding:10px 16px;border-bottom:1px dashed var(--line);flex-wrap:wrap;border-left:3px solid transparent}
   .regrow:last-child{border-bottom:none}
-  .regrow.on{background:linear-gradient(90deg,rgba(15,138,126,.07),transparent);border-left-color:var(--g-amber)}
-  .regrow.on[data-rst="作成済み"]{background:linear-gradient(90deg,rgba(46,139,87,.10),transparent);border-left-color:var(--g-green)}
+  .regrow.on{background:linear-gradient(90deg,rgba(138,146,153,.06),transparent);border-left-color:var(--g-gray)}
+  .regrow.on[data-rst="記載途中"]{border-left-color:var(--g-amber)}
+  .regrow.on[data-rst="仮完成"]{border-left-color:var(--g-indigo)}
+  .regrow.on[data-rst="送信済み"]{border-left-color:var(--g-teal)}
+  .regrow.on[data-rst="承認済"]{background:linear-gradient(90deg,rgba(46,139,87,.10),transparent);border-left-color:var(--g-green)}
   .rg-reg{display:flex;align-items:center;gap:8px;cursor:pointer;flex:1;min-width:210px}
   .rg-reg input{width:17px;height:17px;accent-color:var(--teal-bright);cursor:pointer;flex-shrink:0}
   .rg-name{font-size:.82rem;font-weight:500}
@@ -181,6 +195,7 @@
   .regrow.on .rg-extra{display:flex}
   .rg-extra input[type=number]{width:52px;font-family:inherit;font-size:.8rem;padding:4px 6px;border:1px solid var(--line);border-radius:6px;background:#fff}
   .regrow .cName{width:150px;font-family:inherit;font-size:.78rem;padding:4px 8px;border:1px solid var(--line);border-radius:6px;background:#fff;color:var(--ink)}
+  .regrow .cId{width:120px;font-family:inherit;font-size:.78rem;padding:4px 8px;border:1px solid var(--line);border-radius:6px;background:#fff;color:var(--ink)}
   .regrow .cStatus{font-family:inherit;font-size:.78rem;padding:4px 6px;border:1px solid var(--line);border-radius:6px;background:#fff;color:var(--ink);cursor:pointer}
   .regrow .cases{display:none;flex-basis:100%;width:100%;margin-top:2px;padding-left:26px}
   .regrow.on .cases{display:block}
@@ -188,6 +203,27 @@
   .case-row + .case-row{border-top:1px dotted var(--line)}
   .case-no{font-family:"Noto Serif JP",serif;font-weight:700;font-size:.72rem;color:#fff;background:var(--teal);min-width:32px;height:22px;display:inline-flex;align-items:center;justify-content:center;border-radius:5px}
   .statusline{font-size:.78rem;color:var(--ink-soft);margin-top:4px}
+  .prog-row{margin-bottom:16px}
+  .prog-head{display:flex;justify-content:space-between;align-items:baseline;font-size:.78rem;color:var(--ink-soft);margin-bottom:6px}
+  .prog-head .prog-num b{color:var(--ink);font-variant-numeric:tabular-nums;font-size:.92rem}
+  .prog-bar{position:relative;height:16px;border-radius:8px;background:var(--line)}
+  .prog-fill{display:flex;height:100%;width:100%;border-radius:8px;overflow:hidden}
+  .prog-fill span{display:block;height:100%}
+  .prog-mark{position:absolute;top:-4px;bottom:-4px;width:2px;background:var(--clay);z-index:2}
+  .prog-mark em{position:absolute;top:-13px;left:50%;transform:translateX(-50%);font-size:.6rem;font-style:normal;color:var(--clay);font-weight:700;white-space:nowrap}
+  .prog-legend{display:flex;flex-wrap:wrap;gap:8px 14px;margin-top:10px;font-size:.72rem;color:var(--ink-soft)}
+  .prog-legend .ps-item{display:inline-flex;align-items:center;gap:5px}
+  .prog-legend .ps-item i{width:10px;height:10px;border-radius:2px}
+  .prog-legend .ps-item b{color:var(--ink);font-variant-numeric:tabular-nums}
+  .statusbreak{margin-top:16px}
+  .sb-title{font-size:.8rem;font-weight:600;color:var(--ink);margin-bottom:6px}
+  .sb-bar{display:flex;height:14px;border-radius:7px;overflow:hidden;background:var(--line)}
+  .sb-bar span{display:block;height:100%}
+  .sb-bar .sb-empty{width:100%;background:var(--line)}
+  .sb-legend{display:flex;flex-wrap:wrap;gap:10px 16px;margin-top:8px;font-size:.74rem;color:var(--ink-soft)}
+  .sb-legend .sb-item{display:inline-flex;align-items:center;gap:5px}
+  .sb-legend .sb-item i{width:10px;height:10px;border-radius:2px}
+  .sb-legend .sb-item b{color:var(--ink);font-variant-numeric:tabular-nums}
   .rg-hyo{display:flex;align-items:center;gap:5px;cursor:pointer;color:var(--gold);font-weight:600}
   .rg-hyo input{width:15px;height:15px;accent-color:var(--gold);cursor:pointer}
   .rg-shoki{display:flex;align-items:center;gap:5px;cursor:pointer;color:var(--teal-bright);font-weight:600}
@@ -196,6 +232,8 @@
   .rg-out input{width:15px;height:15px;accent-color:var(--clay);cursor:pointer}
   .field-head .cov{font-size:.74rem;color:var(--ink-soft);font-variant-numeric:tabular-nums}
   .field-head .cov.met{color:var(--g-green);font-weight:700}
+  .field-head .ccnt{font-size:.74rem;color:var(--ink-soft);font-variant-numeric:tabular-nums}
+  .field-head .ccnt.met{color:var(--g-green);font-weight:700}
   .pickline{font-size:.78rem;color:var(--gold);margin-top:12px;font-weight:500}
 </style>
 </head>
@@ -259,14 +297,28 @@
     </section>
 
     <section>
+      <div class="sec-head"><h2>記載・提出の進捗</h2><span class="jp">case status</span></div>
+      <div class="prog-row">
+        <div class="prog-head"><span>総登録症例数</span><span class="prog-num"><b id="psCaseN">0</b> / 120</span></div>
+        <div class="prog-bar"><div class="prog-fill" id="psCaseFill"></div></div>
+      </div>
+      <div class="prog-row">
+        <div class="prog-head"><span>経験した疾患群</span><span class="prog-num"><b id="psGrpN">0</b> / 70</span></div>
+        <div class="prog-bar"><div class="prog-fill" id="psGrpFill"></div><i class="prog-mark" style="left:80%"><em>56</em></i></div>
+      </div>
+      <div class="prog-legend" id="psLegend"></div>
+    </section>
+
+    <section>
       <div class="sec-head"><h2>症例登録の条件</h2><span class="jp">requirements</span></div>
       <details class="cond">
         <summary>修了要件のまとめ（2024年度以降）<span class="chev">▾</span></summary>
         <div class="cond-body">
           <ul class="ruleslist">
             <li>主担当医として<b>56疾患群以上</b>（目標は全70群）、<b>計120症例以上</b>（目標200症例以上）を登録。</li>
-            <li><b>各領域で50%以上の疾患群</b>を経験すること（下の各分野バーで達成を判定）。</li>
-            <li><b>外来症例は登録症例の1割まで</b>。</li>
+            <li><b>各領域で必要な疾患群数</b>を満たすこと（総合内科3・消化器5・循環器5・内分泌2・代謝3・腎臓4・呼吸器4・血液2・神経5・アレルギー1・膠原病1・感染症2・救急4。各分野の「疾患群 ◯/◯」で判定）。</li>
+            <li><b>各領域の最低症例数（7期生＝2024年度〜）</b>：総合内科10・消化器10・循環器10・内分泌3・代謝10・腎臓10・呼吸器10・血液3・神経10・アレルギー3・膠原病3・感染症8・救急10 以上（各分野の「症例 ◯/◯」で判定）。</li>
+            <li><b>外来症例は登録症例の1割まで</b>。修了認定には<b>入院症例を108例以上</b>登録する必要がある。</li>
             <li><b>初期研修（研修医時代）の症例は最大60症例まで</b>。同一症例・同一期間は1名の専攻医のみ登録可。</li>
             <li>病歴要約は<b>この登録症例の中から</b>29篇を選ぶ。各群の「★要約候補」に印を付けて整理できる。</li>
           </ul>
@@ -278,7 +330,6 @@
       <div class="sec-head"><h2>疾患群チェック（全70群）</h2><span class="jp">disease groups</span></div>
       <div id="regfields"></div>
       <p class="pickline" id="pickline"></p>
-      <p class="statusline" id="statusline"></p>
     </section>
 
     <div class="footer-actions">
@@ -718,7 +769,11 @@ const REG_FIELDS=[
   {f:"感染症", groups:REFERENCE["感染症"]},
   {f:"救急", groups:REFERENCE["救急"]},
 ];
+const FIELD_MIN={"総合内科":10,"消化器":10,"循環器":10,"内分泌":3,"代謝":10,"腎臓":10,"呼吸器":10,"血液":3,"神経":10,"アレルギー":3,"膠原病":3,"感染症":8,"救急":10};
+const FIELD_GRP_MIN={"総合内科":3,"消化器":5,"循環器":5,"内分泌":2,"代謝":3,"腎臓":4,"呼吸器":4,"血液":2,"神経":5,"アレルギー":1,"膠原病":1,"感染症":2,"救急":4};
 const KEY_REG="josler-reg-v1";
+const REG_STATUSES=["症例確保・未記載","記載途中","仮完成","送信済み","承認済"];
+const STATUS_COLOR={"症例確保・未記載":"var(--g-gray)","記載途中":"var(--g-amber)","仮完成":"var(--g-indigo)","送信済み":"var(--g-teal)","承認済":"var(--g-green)"};
 let REG_SLOTS=[];
 REG_FIELDS.forEach((fd,fi)=> fd.groups.forEach((g,gi)=> REG_SLOTS.push({id:"r"+fi+"_"+gi, fi, gi, field:fd.f, g:g.g, eg:g.eg})));
 let regState={};
@@ -742,23 +797,24 @@ function loadReg(){
     if(v){
       const d=JSON.parse(v);
       if(d.groups) REG_SLOTS.forEach(s=>{ const g=d.groups[s.id]; if(!g) return;
-        if(g.cases){ regState[s.id]={reg:!!g.reg,count:Math.max(1,parseInt(g.count)||1),cases:g.cases.map(c=>({name:c.name||"",status:c.status||"作成中",hyo:!!c.hyo,shoki:!!c.shoki,out:!!c.out}))}; }
-        else { regState[s.id]={reg:!!g.reg,count:Math.max(1,parseInt(g.count)||1),cases:[{name:g.name||"",status:g.status||"作成中",hyo:!!g.hyo,shoki:false,out:false}]}; }
+        if(g.cases){ regState[s.id]={reg:!!g.reg,count:Math.max(1,parseInt(g.count)||1),cases:g.cases.map(c=>({name:c.name||"",cid:c.cid||"",status:normStatus(c.status),hyo:!!c.hyo,shoki:!!c.shoki,out:!!c.out}))}; }
+        else { regState[s.id]={reg:!!g.reg,count:Math.max(1,parseInt(g.count)||1),cases:[{name:g.name||"",cid:"",status:normStatus(g.status),hyo:!!g.hyo,shoki:false,out:false}]}; }
         syncCases(regState[s.id]); });
     }
   }catch(e){ /* no saved data yet */ }
 }
 
-function mkCase(){return {name:"",status:"作成中",hyo:false,shoki:false,out:false};}
+function mkCase(){return {name:"",cid:"",status:"症例確保・未記載",hyo:false,shoki:false,out:false};}
+function normStatus(s){ if(REG_STATUSES.includes(s)) return s; if(s==='作成中') return '記載途中'; if(s==='作成済み') return '仮完成'; return '症例確保・未記載'; }
 function syncCases(rs){ if(!rs.cases) rs.cases=[mkCase()]; rs.count=Math.max(1,parseInt(rs.count)||1); while(rs.cases.length<rs.count) rs.cases.push(mkCase()); if(rs.cases.length>rs.count) rs.cases.length=rs.count; }
-function caseTint(rs){ return (rs.cases&&rs.cases.length&&rs.cases.every(c=>c.status==='作成済み'))?'作成済み':'作成中'; }
+function caseTint(rs){ if(!rs.cases||!rs.cases.length) return REG_STATUSES[0]; let mi=REG_STATUSES.length-1; rs.cases.forEach(c=>{ const i=REG_STATUSES.indexOf(c.status); if(i>=0&&i<mi) mi=i; }); return REG_STATUSES[mi]; }
 function casesHTML(id){ const rs=regState[id]; syncCases(rs); const multi=rs.count>1; return rs.cases.map((c,ci)=>`
         <div class="case-row">
           ${multi?`<span class="case-no">#${ci+1}</span>`:''}
           <input type="text" class="cName" data-ci="${ci}" placeholder="病名メモ（任意）" value="${escapeHtml(c.name||'')}">
+          <input type="text" class="cId" data-ci="${ci}" placeholder="症例ID（任意）" value="${escapeHtml(c.cid||'')}">
           <select class="cStatus" data-ci="${ci}">
-            <option value="作成中" ${c.status==='作成中'?'selected':''}>作成中</option>
-            <option value="作成済み" ${c.status==='作成済み'?'selected':''}>作成済み</option>
+            ${REG_STATUSES.map(st=>`<option value="${st}" ${c.status===st?'selected':''}>${st}</option>`).join('')}
           </select>
           <label class="rg-hyo"><input type="checkbox" class="cHyo" data-ci="${ci}" ${c.hyo?'checked':''}> ★要約候補</label>
           <label class="rg-shoki"><input type="checkbox" class="cShoki" data-ci="${ci}" ${c.shoki?'checked':''}> 初期研修</label>
@@ -766,6 +822,7 @@ function casesHTML(id){ const rs=regState[id]; syncCases(rs); const multi=rs.cou
         </div>`).join(''); }
 function wireCases(box,id,row){
   box.querySelectorAll('.cName').forEach(el=>el.addEventListener('input',()=>{regState[id].cases[+el.dataset.ci].name=el.value;queueSaveReg();}));
+  box.querySelectorAll('.cId').forEach(el=>el.addEventListener('input',()=>{regState[id].cases[+el.dataset.ci].cid=el.value;queueSaveReg();}));
   box.querySelectorAll('.cStatus').forEach(el=>el.addEventListener('change',()=>{regState[id].cases[+el.dataset.ci].status=el.value;row.dataset.rst=caseTint(regState[id]);queueSaveReg();recomputeReg();}));
   box.querySelectorAll('.cHyo').forEach(el=>el.addEventListener('change',()=>{regState[id].cases[+el.dataset.ci].hyo=el.checked;queueSaveReg();recomputeReg();}));
   box.querySelectorAll('.cShoki').forEach(el=>el.addEventListener('change',()=>{regState[id].cases[+el.dataset.ci].shoki=el.checked;queueSaveReg();recomputeReg();}));
@@ -780,7 +837,8 @@ function buildRegUI(){
     head.innerHTML=`<span class="fname">${fd.f}</span>
       <span class="req">${total}群</span>
       <div class="fbar"><i data-rfield="${fd.f}"></i></div>
-      <span class="cov" data-rcov="${fd.f}">0/${total}</span>`;
+      <span class="cov" data-rcov="${fd.f}">0/${total}</span>
+      <span class="ccnt" data-rccnt="${fd.f}">症例 0/${FIELD_MIN[fd.f]||0}</span>`;
     wrap.appendChild(head);
     fd.groups.forEach((g,gi)=>{
       const id="r"+fi+"_"+gi, rs=regState[id]; syncCases(rs);
@@ -804,9 +862,19 @@ function setNote(id,msg,ok){
   const el=document.getElementById(id); el.textContent=msg; el.classList.toggle('ok',!!ok);
 }
 
+function renderStatusBreak(sc,gsc,total,covered){
+  const cf=document.getElementById('psCaseFill'), gf=document.getElementById('psGrpFill');
+  const cn=document.getElementById('psCaseN'), gn=document.getElementById('psGrpN'), leg=document.getElementById('psLegend');
+  if(cn) cn.textContent=total||0;
+  if(gn) gn.textContent=covered||0;
+  if(cf) cf.innerHTML=REG_STATUSES.map(s=> (sc[s]? `<span style="width:${Math.min(sc[s]/120*100,100)}%;background:${STATUS_COLOR[s]}" title="${s} ${sc[s]}件"></span>` : '')).join('');
+  if(gf) gf.innerHTML=REG_STATUSES.map(s=> (gsc[s]? `<span style="width:${Math.min(gsc[s]/70*100,100)}%;background:${STATUS_COLOR[s]}" title="${s} ${gsc[s]}群"></span>` : '')).join('');
+  if(leg) leg.innerHTML=REG_STATUSES.map(s=>`<span class="ps-item"><i style="background:${STATUS_COLOR[s]}"></i>${s} <b>${sc[s]||0}</b>件 / <b>${gsc[s]||0}</b>群</span>`).join('');
+}
 function recomputeReg(){
-  let covered=0,total=0,hyo=0,done=0,prog=0,shokiN=0,outN=0;
-  REG_SLOTS.forEach(s=>{const rs=regState[s.id]; if(rs.reg){covered++; syncCases(rs); total+=rs.count; rs.cases.forEach(c=>{ if(c.hyo) hyo++; if(c.shoki) shokiN++; if(c.out) outN++; if(c.status==='作成済み') done++; else prog++; });}});
+  let covered=0,total=0,hyo=0,shokiN=0,outN=0;
+  const sc={}, gsc={}; REG_STATUSES.forEach(s=>{sc[s]=0; gsc[s]=0;});
+  REG_SLOTS.forEach(s=>{const rs=regState[s.id]; if(rs.reg){covered++; syncCases(rs); total+=rs.count; gsc[caseTint(rs)]=(gsc[caseTint(rs)]||0)+1; rs.cases.forEach(c=>{ if(c.hyo) hyo++; if(c.shoki) shokiN++; if(c.out) outN++; sc[c.status]=(sc[c.status]||0)+1; });}});
   document.getElementById('rgN').textContent=covered;
   document.getElementById('rgBar').style.width=Math.min(covered/70*100,100)+"%";
   setNote('rgNote', covered>=56?('修了要件クリア（'+covered+'群）✓'):('修了要件：56群以上（あと'+(56-covered)+'群）'), covered>=56);
@@ -821,15 +889,17 @@ function recomputeReg(){
   document.getElementById('rShokiBar').style.width=Math.min(shokiN/60*100,100)+"%";
   toggleWarn('rc-shoki', shokiN>60, 'rShokiNote', shokiN>60?'上限60症例を超過':'各症例のチェックから自動集計（上限60）');
   REG_FIELDS.forEach((fd,fi)=>{
-    const tot=fd.groups.length, need=Math.ceil(tot/2); let c=0;
-    fd.groups.forEach((g,gi)=>{ if(regState["r"+fi+"_"+gi].reg) c++; });
+    const tot=fd.groups.length, need=FIELD_GRP_MIN[fd.f]||Math.ceil(tot/2); let c=0, cases=0;
+    fd.groups.forEach((g,gi)=>{ const rs=regState["r"+fi+"_"+gi]; if(rs.reg){ c++; cases+=rs.count; } });
     document.querySelector(`[data-rfield="${fd.f}"]`).style.width=(c/tot*100)+"%";
     const cov=document.querySelector(`[data-rcov="${fd.f}"]`);
-    cov.textContent=c+"/"+tot+"（50%:"+need+"群）";
+    cov.textContent="疾患群 "+c+"/"+tot+"（必要"+need+"群）";
     cov.classList.toggle('met', c>=need);
+    const mn=FIELD_MIN[fd.f]||0, cc=document.querySelector(`[data-rccnt="${fd.f}"]`);
+    if(cc){ cc.textContent="症例 "+cases+"/"+mn; cc.classList.toggle('met', cases>=mn); }
   });
   document.getElementById('pickline').textContent="★要約候補に選択："+hyo+"件　／　病歴要約は領域別26篇＋外科紹介2・剖検1＝計29篇";
-  document.getElementById('statusline').textContent="登録の作成状況：作成済み "+done+"件 ／ 作成中 "+prog+"件";
+  renderStatusBreak(sc,gsc,total,covered);
 }
 
 document.getElementById('resetRegBtn').addEventListener('click',()=>{
